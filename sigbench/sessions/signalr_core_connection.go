@@ -184,35 +184,34 @@ func (s *SignalRCoreConnection) Execute(ctx *UserContext) error {
 		s.logError(ctx, "Fail to serialize signalr core message", err)
 		return err
 	}
+    log.Println("msg:", string(msg))
 	err = c.WriteMessage(websocket.TextMessage, msg)
 	if err != nil {
 		s.logError(ctx, "Fail to send echo message", err)
 		return err
 	}
 
-	go func() {
-		defer atomic.AddInt64(&s.connectionEstablished, -1)
-		for {
-			control, ok := <-ctx.Control
-			log.Println("Control:", control, ", ok:", ok)
-			if !ok || control == "close" {
-				err = c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-				if err != nil {
-					s.logError(ctx, "Fail to close websocket gracefully", err)
-					return
-				}
-				break
+	defer atomic.AddInt64(&s.connectionEstablished, -1)
+	for {
+		control, ok := <-ctx.Control
+		log.Println("Control:", control, ", ok:", ok)
+		if !ok || control == "close" {
+			err = c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+			if err != nil {
+				s.logError(ctx, "Fail to close websocket gracefully", err)
+				return err
 			}
+			break
 		}
+	}
 
-		closeState := <-closeChan
-		if closeState != 0 {
-			log.Println("Failed in websocket session")
-			atomic.AddInt64(&s.connectionCloseError, 1)
-		} else {
-			atomic.AddInt64(&s.successCount, 1)
-		}
-	}()
+	closeState := <-closeChan
+	if closeState != 0 {
+		log.Println("Failed in websocket session")
+		atomic.AddInt64(&s.connectionCloseError, 1)
+	} else {
+		atomic.AddInt64(&s.successCount, 1)
+	}
 
 	return nil
 }
