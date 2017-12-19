@@ -45,6 +45,9 @@ func (c *AgentController) getSessionUsers(phase *JobPhase, percentage float64, a
 }
 
 func (c *AgentController) runPhase(job *Job, phase *JobPhase, agentCount, agentIdx int, wg *sync.WaitGroup) {
+	controlChan := make(chan string)
+	defer close(controlChan)
+
 	for idx, sessionName := range job.SessionNames {
 		sessionUsers := c.getSessionUsers(phase, job.SessionPercentages[idx], agentCount, agentIdx)
 		log.Println(fmt.Sprintf("Session %s users: %d", sessionName, sessionUsers))
@@ -72,6 +75,7 @@ func (c *AgentController) runPhase(job *Job, phase *JobPhase, agentCount, agentI
 					UserId: uid,
 					Phase:  phase.Name,
 					Params: job.SessionParams,
+					Control: controlChan
 				}
 
 				// TODO: Check error

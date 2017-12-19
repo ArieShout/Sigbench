@@ -9,9 +9,10 @@ import (
 	"sync/atomic"
 	"time"
 
+	"strings"
+
 	"github.com/gorilla/websocket"
 	"microsoft.com/sigbench/util"
-	"strings"
 )
 
 const MaxInstances = 256
@@ -122,8 +123,8 @@ func (s *SignalRCoreBroadcastSender) Execute(ctx *UserContext) error {
 		return err
 	}
 
-	wsUrl := "ws://" + host + "/chat?id=" + handshakeContent.ConnectionId
-	c, _, err := websocket.DefaultDialer.Dial(wsUrl, nil)
+	wsURL := "ws://" + host + "/chat?id=" + handshakeContent.ConnectionId
+	c, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
 	if err != nil {
 		s.logError(ctx, "Fail to connect to websocket", err)
 		return err
@@ -212,7 +213,6 @@ func (s *SignalRCoreBroadcastSender) Execute(ctx *UserContext) error {
 		case <-timeoutChan:
 			s.logError(ctx, "Fail to receive all self broadcast messages within timeout", nil)
 			return errors.New("fail receive all self broadcast messages within timeout")
-			break
 		}
 	}
 
