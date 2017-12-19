@@ -73,7 +73,6 @@ func (s *SignalRCoreConnection) logHostInstance(ctx *UserContext, hostName strin
 
 func (s *SignalRCoreConnection) Execute(ctx *UserContext) error {
 	atomic.AddInt64(&s.connectionInProgress, 1)
-	defer atomic.AddInt64(&s.connectionInProgress, -1)
 
 	hosts := strings.Split(ctx.Params[ParamHost], ",")
 	host := hosts[atomic.AddInt64(&s.userIndex, 1)%int64(len(hosts))]
@@ -133,6 +132,7 @@ func (s *SignalRCoreConnection) Execute(ctx *UserContext) error {
 				return
 			}
 			if !established {
+				atomic.AddInt64(&s.connectionInProgress, -1)
 				atomic.AddInt64(&s.connectionEstablished, 1)
 				established = true
 			}
