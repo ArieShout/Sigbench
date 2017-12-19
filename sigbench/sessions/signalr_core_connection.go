@@ -38,7 +38,7 @@ func (s *SignalRCoreConnection) Name() string {
 	return "SignalRCore:Connection"
 }
 
-func (s *SignalRCoreConnection) Setup(map[stirng]string) error {
+func (s *SignalRCoreConnection) Setup(map[string]string) error {
 	s.instanceHitCount = make([]int64, maxInstances, maxInstances)
 	return nil
 }
