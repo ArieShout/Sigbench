@@ -184,7 +184,6 @@ func (s *SignalRCoreConnection) Execute(ctx *UserContext) error {
 		s.logError(ctx, "Fail to serialize signalr core message", err)
 		return err
 	}
-    log.Println("msg:", string(msg))
 	err = c.WriteMessage(websocket.TextMessage, msg)
 	if err != nil {
 		s.logError(ctx, "Fail to send echo message", err)
@@ -225,10 +224,10 @@ func (s *SignalRCoreConnection) Counters() map[string]int64 {
 		"signalrcore:connection:success":         atomic.LoadInt64(&s.successCount),
 		"signalrcore:connection:message:receive": atomic.LoadInt64(&s.messageReceiveCount),
 		"signalrcore:connection:message:send":    atomic.LoadInt64(&s.messageSendCount),
-		"signalrcore:connection:latency:<100":    atomic.LoadInt64(&s.latencyLessThan100ms),
-		"signalrcore:connection:latency:<500":    atomic.LoadInt64(&s.latencyLessThan500ms),
-		"signalrcore:connection:latency:<1000":   atomic.LoadInt64(&s.latencyLessThan1000ms),
-		"signalrcore:connection:latency:>1000":   atomic.LoadInt64(&s.latencyGreaterThan1000ms),
+		"signalrcore:connection:latency:lt_100":  atomic.LoadInt64(&s.latencyLessThan100ms),
+		"signalrcore:connection:latency:lt_500":  atomic.LoadInt64(&s.latencyLessThan500ms),
+		"signalrcore:connection:latency:lt_1000": atomic.LoadInt64(&s.latencyLessThan1000ms),
+		"signalrcore:connection:latency:gt_1000": atomic.LoadInt64(&s.latencyGreaterThan1000ms),
 	}
 
 	for i := 0; i < maxInstances; i++ {
