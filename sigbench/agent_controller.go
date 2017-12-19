@@ -30,10 +30,10 @@ func (c *AgentController) getSessionUsers(phase *JobPhase, percentage float64, a
 	major := (totalSessionUsers + int64(agentCount) - 1) / int64(agentCount)
 
 	lastIdx := agentCount - 1
-	for totalSessionUsers - major * int64(lastIdx) < 0 {
+	for totalSessionUsers-major*int64(lastIdx) < 0 {
 		lastIdx--
 	}
-	last := totalSessionUsers - int64(lastIdx) * major
+	last := totalSessionUsers - int64(lastIdx)*major
 
 	if agentIdx < lastIdx {
 		return major
@@ -72,10 +72,10 @@ func (c *AgentController) runPhase(job *Job, phase *JobPhase, agentCount, agentI
 				}
 
 				ctx := &sessions.UserContext{
-					UserId: uid,
-					Phase:  phase.Name,
-					Params: job.SessionParams,
-					Control: controlChan
+					UserId:  uid,
+					Phase:   phase.Name,
+					Params:  job.SessionParams,
+					Control: controlChan,
 				}
 
 				// TODO: Check error
