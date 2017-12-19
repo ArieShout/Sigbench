@@ -194,6 +194,7 @@ func (s *SignalRCoreConnection) Execute(ctx *UserContext) error {
 			s.logError(ctx, "Fail to send echo message", err)
 			return err
 		}
+		atomic.AddInt64(&s.messageSendCount, 1)
 		return nil
 	}
 	if err = sendMessage(); err != nil {
