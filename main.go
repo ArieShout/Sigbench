@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"microsoft.com/sigbench"
-	"microsoft.com/sigbench/snapshot"
 	"microsoft.com/sigbench/service"
+	"microsoft.com/sigbench/snapshot"
 )
 
 func startAsMaster(agents []string, config string, outDir string) {

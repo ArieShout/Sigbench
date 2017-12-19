@@ -46,7 +46,6 @@ func (c *AgentController) getSessionUsers(phase *JobPhase, percentage float64, a
 
 func (c *AgentController) runPhase(job *Job, phase *JobPhase, agentCount, agentIdx int, wg *sync.WaitGroup) {
 	controlChan := make(chan string)
-	defer close(controlChan)
 
 	for idx, sessionName := range job.SessionNames {
 		sessionUsers := c.getSessionUsers(phase, job.SessionPercentages[idx], agentCount, agentIdx)

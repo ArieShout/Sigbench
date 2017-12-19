@@ -73,7 +73,7 @@ func (s *SignalRCoreConnection) logHostInstance(ctx *UserContext, hostName strin
 
 func (s *SignalRCoreConnection) Execute(ctx *UserContext) error {
 	atomic.AddInt64(&s.connectionInProgress, 1)
-	defer atomic.AddInt64(&s.connectionInProgress, 1)
+	defer atomic.AddInt64(&s.connectionInProgress, -1)
 
 	hosts := strings.Split(ctx.Params[ParamHost], ",")
 	host := hosts[atomic.AddInt64(&s.userIndex, 1)%int64(len(hosts))]
@@ -113,12 +113,12 @@ func (s *SignalRCoreConnection) Execute(ctx *UserContext) error {
 	defer c.Close()
 
 	closeChan := make(chan int)
-	defer close(closeChan)
 
 	go func() {
 		defer func() {
 			// abnormal close
 			closeChan <- 1
+            close(closeChan)
 		}()
 		for {
 			_, msgWithTerm, err := c.ReadMessage()
@@ -160,27 +160,30 @@ func (s *SignalRCoreConnection) Execute(ctx *UserContext) error {
 	}
 
 	atomic.AddInt64(&s.connectionEstablished, 1)
-	defer atomic.AddInt64(&s.connectionEstablished, -1)
 
-	for {
-		control, ok := <-ctx.Control
-		if !ok || control == "close" {
-			err = c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-			if err != nil {
-				s.logError(ctx, "Fail to close websocket gracefully", err)
-				return err
+    go func() {
+	    defer atomic.AddInt64(&s.connectionEstablished, -1)
+		for {
+			control, ok := <-ctx.Control
+	        log.Println("Control:", control, ", ok:", ok);
+			if !ok || control == "close" {
+				err = c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+				if err != nil {
+					s.logError(ctx, "Fail to close websocket gracefully", err)
+					return
+				}
+				break
 			}
-			break
 		}
-	}
 
-	closeState := <-closeChan
-	if closeState != 0 {
-		log.Println("Failed in websocket session")
-		atomic.AddInt64(&s.connectionCloseError, 1)
-	} else {
-		atomic.AddInt64(&s.successCount, 1)
-	}
+		closeState := <-closeChan
+		if closeState != 0 {
+			log.Println("Failed in websocket session")
+			atomic.AddInt64(&s.connectionCloseError, 1)
+		} else {
+			atomic.AddInt64(&s.successCount, 1)
+		}
+	}()
 
 	return nil
 }
