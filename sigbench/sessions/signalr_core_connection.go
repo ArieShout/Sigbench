@@ -118,7 +118,7 @@ func (s *SignalRCoreConnection) Execute(ctx *UserContext) error {
 		defer func() {
 			// abnormal close
 			closeChan <- 1
-            close(closeChan)
+			close(closeChan)
 		}()
 		for {
 			_, msgWithTerm, err := c.ReadMessage()
@@ -131,6 +131,7 @@ func (s *SignalRCoreConnection) Execute(ctx *UserContext) error {
 				}
 				return
 			}
+			atomic.AddInt64(&s.connectionEstablished, 1)
 
 			msg := msgWithTerm[:len(msgWithTerm)-1]
 			var content SignalRCoreInvocation
@@ -141,6 +142,15 @@ func (s *SignalRCoreConnection) Execute(ctx *UserContext) error {
 			}
 
 			atomic.AddInt64(&s.messageReceiveCount, 1)
+
+			if content.Type == 1 && content.Target == "echo" {
+				sendStart, err := strconv.ParseInt(content.Arguments[1], 10, 64)
+				if err != nil {
+					s.logError(ctx, "Failed to decode start timestamp", err)
+				} else {
+					s.logLatency((time.Now().UnixNano() - sendStart) / 1000000)
+				}
+			}
 
 			if content.Type == 1 && content.Target == "broadcast" {
 				sendStart, err := strconv.ParseInt(content.Arguments[1], 10, 64)
@@ -159,13 +169,32 @@ func (s *SignalRCoreConnection) Execute(ctx *UserContext) error {
 		return err
 	}
 
-	atomic.AddInt64(&s.connectionEstablished, 1)
+	// Send message
+	msg, err := SerializeSignalRCoreMessage(&SignalRCoreInvocation{
+		Type:         1,
+		InvocationId: "0",
+		Target:       "echo",
+		Arguments: []string{
+			ctx.UserId,
+			strconv.FormatInt(time.Now().UnixNano(), 10),
+		},
+		NonBlocking: false,
+	})
+	if err != nil {
+		s.logError(ctx, "Fail to serialize signalr core message", err)
+		return err
+	}
+	err = c.WriteMessage(websocket.TextMessage, msg)
+	if err != nil {
+		s.logError(ctx, "Fail to send echo message", err)
+		return err
+	}
 
-    go func() {
-	    defer atomic.AddInt64(&s.connectionEstablished, -1)
+	go func() {
+		defer atomic.AddInt64(&s.connectionEstablished, -1)
 		for {
 			control, ok := <-ctx.Control
-	        log.Println("Control:", control, ", ok:", ok);
+			log.Println("Control:", control, ", ok:", ok)
 			if !ok || control == "close" {
 				err = c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 				if err != nil {
