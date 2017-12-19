@@ -5,4 +5,5 @@ const (
 	ParamPassword              = "password"
 	ParamBroadcastDurationSecs = "broadcastDurationSecs"
 	ParamPublishInterval       = "publishInterval"
+	ParamRepeatEcho            = "repeatEcho"
 )

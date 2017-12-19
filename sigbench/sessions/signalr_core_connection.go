@@ -174,24 +174,40 @@ func (s *SignalRCoreConnection) Execute(ctx *UserContext) error {
 	}
 
 	// Send message
-	msg, err := SerializeSignalRCoreMessage(&SignalRCoreInvocation{
-		Type:         1,
-		InvocationId: "0",
-		Target:       "echo",
-		Arguments: []string{
-			ctx.UserId,
-			strconv.FormatInt(time.Now().UnixNano(), 10),
-		},
-		NonBlocking: false,
-	})
-	if err != nil {
-		s.logError(ctx, "Fail to serialize signalr core message", err)
+	sendMessage := func() error {
+		msg, err := SerializeSignalRCoreMessage(&SignalRCoreInvocation{
+			Type:         1,
+			InvocationId: "0",
+			Target:       "echo",
+			Arguments: []string{
+				ctx.UserId,
+				strconv.FormatInt(time.Now().UnixNano(), 10),
+			},
+			NonBlocking: false,
+		})
+		if err != nil {
+			s.logError(ctx, "Fail to serialize signalr core message", err)
+			return err
+		}
+		err = c.WriteMessage(websocket.TextMessage, msg)
+		if err != nil {
+			s.logError(ctx, "Fail to send echo message", err)
+			return err
+		}
+		return nil
+	}
+	if err = sendMessage(); err != nil {
 		return err
 	}
-	err = c.WriteMessage(websocket.TextMessage, msg)
-	if err != nil {
-		s.logError(ctx, "Fail to send echo message", err)
-		return err
+	repeatEcho := ctx.Params[ParamRepeatEcho]
+	if repeatEcho == "true" {
+		ticker := time.NewTicker(time.Second)
+		for range ticker.C {
+			if err = sendMessage(); err != nil {
+				ticker.Stop()
+				return err
+			}
+		}
 	}
 
 	defer atomic.AddInt64(&s.connectionEstablished, -1)
