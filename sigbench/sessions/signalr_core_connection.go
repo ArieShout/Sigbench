@@ -120,6 +120,7 @@ func (s *SignalRCoreConnection) Execute(ctx *UserContext) error {
 			closeChan <- 1
 			close(closeChan)
 		}()
+		established := false
 		for {
 			_, msgWithTerm, err := c.ReadMessage()
 			if err != nil {
@@ -131,7 +132,10 @@ func (s *SignalRCoreConnection) Execute(ctx *UserContext) error {
 				}
 				return
 			}
-			atomic.AddInt64(&s.connectionEstablished, 1)
+			if !established {
+				atomic.AddInt64(&s.connectionEstablished, 1)
+				established = true
+			}
 
 			msg := msgWithTerm[:len(msgWithTerm)-1]
 			var content SignalRCoreInvocation
