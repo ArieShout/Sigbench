@@ -15,6 +15,7 @@ type Session interface {
 var SessionMap = map[string]Session{
 	"signalrcore:echo":             &SignalRCoreEcho{},
 	"signalrcore:broadcast:sender": &SignalRCoreBroadcastSender{},
+	"signalrcore:connection":       &SignalRCoreConnection{},
 	"signalrfx:broadcast:sender":   &SignalRFxBroadcastSender{},
 	"redis:pubsub":                 &RedisPubSub{},
 }
