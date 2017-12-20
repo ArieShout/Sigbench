@@ -173,11 +173,13 @@ func (s *SignalRCoreConnection) Execute(ctx *UserContext) error {
 		return err
 	}
 
+	invocationID := 0
+
 	// Send message
 	sendMessage := func() error {
 		msg, err := SerializeSignalRCoreMessage(&SignalRCoreInvocation{
 			Type:         1,
-			InvocationId: "0",
+			InvocationId: strconv.Itoa(invocationID),
 			Target:       "echo",
 			Arguments: []string{
 				ctx.UserId,
@@ -194,6 +196,7 @@ func (s *SignalRCoreConnection) Execute(ctx *UserContext) error {
 			s.logError(ctx, "Fail to send echo message", err)
 			return err
 		}
+		invocationID++
 		atomic.AddInt64(&s.messageSendCount, 1)
 		return nil
 	}
