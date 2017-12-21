@@ -76,6 +76,7 @@ func (s *SocketIOConnection) Execute(ctx *UserContext) error {
 	host := hosts[atomic.AddInt64(&s.userIndex, 1)%int64(len(hosts))]
 
 	client, err := socketio.NewClient(host, func(msg socketio.Message) {
+		atomic.AddInt64(&s.messageReceiveCount, 1)
 		if tpe := msg.Type(); tpe == 42 {
 			var data []interface{}
 			json.Unmarshal(msg.Bytes(), &data)

@@ -170,9 +170,7 @@ func NewClient(host string, handler MessageHandler, stateChangeHandler StateChan
 	go func() {
 		ticker := time.NewTicker(time.Millisecond * time.Duration(io.PingInterval))
 		defer ticker.Stop()
-		defer func() {
-			close(io.writerClosed)
-		}()
+		defer close(io.writerClosed)
 		for {
 			select {
 			case <-io.closeChan:
@@ -261,6 +259,7 @@ func (io *Client) AddMessageHandler(handler MessageHandler) {
 
 // Close stops all the background workers for the client and gracefully closes the client.
 func (io *Client) Close() {
+	// TODO: we need to send websocket message to the server to indicate we want to close the socket
 	close(io.closeChan)
 	<-io.writerClosed
 	io.Conn.Close()
