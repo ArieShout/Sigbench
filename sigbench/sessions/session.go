@@ -18,6 +18,7 @@ var SessionMap = map[string]Session{
 	"signalrcore:connection":       &SignalRCoreConnection{},
 	"signalrfx:broadcast:sender":   &SignalRFxBroadcastSender{},
 	"redis:pubsub":                 &RedisPubSub{},
+	"socketio:connection":          &SocketIOConnection{},
 }
 
 type DummySession struct {
