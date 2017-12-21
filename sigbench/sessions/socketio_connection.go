@@ -80,7 +80,7 @@ func (s *SocketIOConnection) Execute(ctx *UserContext) error {
 		if tpe := msg.Type(); tpe == 42 {
 			var data []interface{}
 			json.Unmarshal(msg.Bytes(), &data)
-			if len(data) == 2 {
+			if len(data) == 2 && data[0] == "echo" {
 				sendStart, err := strconv.ParseInt(data[1].(map[string]interface{})["arguments"].([]interface{})[1].(string), 10, 64)
 				if err != nil {
 					s.logError(ctx, "Failed to decode start timestamp", err)

@@ -223,6 +223,7 @@ func (io *Client) writeMessage(msg Message) error {
 	if objectMsg, ok := msg.(ObjectMessage); ok {
 		obj := objectMsg.object.(Invocation)
 		obj.Arg["arguments"].([]string)[1] = strconv.FormatInt(time.Now().UnixNano(), 10)
+		obj.Arg["p"] = 1 // extra payload so that socket.io message size is exactly the same as signalR
 		data := []interface{}{
 			obj.Target,
 			obj.Arg,
