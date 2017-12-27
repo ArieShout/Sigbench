@@ -16,6 +16,7 @@ var SessionMap = map[string]Session{
 	"signalrcore:echo":               &SignalRCoreEcho{},
 	"signalrcore:broadcast:sender":   &SignalRCoreBroadcastSender{},
 	"signalrcore:connection":         &SignalRCoreConnection{},
+	"signalrcore21:connection":       &SignalRCore21Connection{},
 	"signalrcore:msgpack:connection": &SignalRCoreMsgpackConnection{},
 	"signalrfx:broadcast:sender":     &SignalRFxBroadcastSender{},
 	"redis:pubsub":                   &RedisPubSub{},
