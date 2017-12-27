@@ -64,6 +64,7 @@ func (c *MasterController) collectCounters(sessionNames []string) map[string]int
 }
 
 func (c *MasterController) watchCounters(sessionNames []string, stopChan chan struct{}) {
+	secondsPassed := 0
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 	for {
@@ -76,6 +77,10 @@ func (c *MasterController) watchCounters(sessionNames []string, stopChan chan st
 			}
 
 			c.printCounters(counters)
+			secondsPassed++
+			if secondsPassed >= 100 {
+				log.Println(">>> 100 seconds passed <<<")
+			}
 		case <-stopChan:
 			return
 		}
