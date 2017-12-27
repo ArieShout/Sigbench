@@ -52,10 +52,7 @@ type SignalRCoreMsgpackConnection struct {
 	messageReceiveCount int64
 	messageSendCount    int64
 
-	latencyLessThan100ms     int64
-	latencyLessThan500ms     int64
-	latencyLessThan1000ms    int64
-	latencyGreaterThan1000ms int64
+	latency [11]int64
 
 	instanceHitCount []int64
 }
@@ -75,16 +72,11 @@ func (s *SignalRCoreMsgpackConnection) logError(ctx *UserContext, msg string, er
 }
 
 func (s *SignalRCoreMsgpackConnection) logLatency(latency int64) {
-	// log.Println("Latency: ", latency)
-	if latency < 100 {
-		atomic.AddInt64(&s.latencyLessThan100ms, 1)
-	} else if latency < 500 {
-		atomic.AddInt64(&s.latencyLessThan500ms, 1)
-	} else if latency < 1000 {
-		atomic.AddInt64(&s.latencyLessThan1000ms, 1)
-	} else {
-		atomic.AddInt64(&s.latencyGreaterThan1000ms, 1)
+	index := int(latency / 100)
+	if index > 10 {
+		index = 10
 	}
+	atomic.AddInt64(&s.latency[index], 1)
 }
 
 func (s *SignalRCoreMsgpackConnection) logHostInstance(ctx *UserContext, hostName string) error {
@@ -300,10 +292,11 @@ func (s *SignalRCoreMsgpackConnection) Counters() map[string]int64 {
 		"signalrcore:msgpack:connection:success":         atomic.LoadInt64(&s.successCount),
 		"signalrcore:msgpack:connection:message:receive": atomic.LoadInt64(&s.messageReceiveCount),
 		"signalrcore:msgpack:connection:message:send":    atomic.LoadInt64(&s.messageSendCount),
-		"signalrcore:msgpack:connection:latency:lt_100":  atomic.LoadInt64(&s.latencyLessThan100ms),
-		"signalrcore:msgpack:connection:latency:lt_500":  atomic.LoadInt64(&s.latencyLessThan500ms),
-		"signalrcore:msgpack:connection:latency:lt_1000": atomic.LoadInt64(&s.latencyLessThan1000ms),
-		"signalrcore:msgpack:connection:latency:gt_1000": atomic.LoadInt64(&s.latencyGreaterThan1000ms),
+		"signalrcore:msgpack:connection:latency:gt_1000": atomic.LoadInt64(&s.latency[10]),
+	}
+
+	for i := 0; i < 10; i++ {
+		counters["signalrcore:msgpack:connection:latency:lt_"+strconv.Itoa(i+1)+"00"] = atomic.LoadInt64(&s.latency[i])
 	}
 
 	for i := 0; i < maxInstances; i++ {
