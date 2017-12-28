@@ -78,10 +78,8 @@ func (c *MasterController) watchCounters(sessionNames []string, stopChan chan st
 
 			c.printCounters(counters)
 			secondsPassed++
-			if secondsPassed >= 150 {
-				log.Println("*** 150 seconds passed ***")
-			} else if secondsPassed >= 100 {
-				log.Println(">>> 100 seconds passed <<<")
+			if secondsPassed >= 50 {
+				log.Printf("*** %d seconds passed ***\n", secondsPassed)
 			}
 		case <-stopChan:
 			return
